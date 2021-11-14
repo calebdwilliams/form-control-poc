@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <title>FormControl demo page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <meta name="description" content="FormControl demo page">
+    <meta charset="UTF-8">
+    <!-- <link rel="stylesheet" href="styles/page.css"/> -->
+  </head>
+  <body>
+    <form id="form">
+      <!-- <test-input name="test">Label text</test-input> -->
+      <x-control name="x-control"></x-control>
+      <lit-control name="lit-control"></lit-control>
+      <button type="submit">Submit</button>
+      <button type="reset">Reset</button>
+    </form>
+
+    <script>
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        const data = new FormData(event.target);
+        console.log(data.get('x-control'));
+        console.log(data.get('lit-control'));
+      });
+    </script>
+  <script defer src="/demo/index.ts" type="module"></script>
+</html>
