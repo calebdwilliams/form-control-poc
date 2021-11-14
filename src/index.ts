@@ -99,6 +99,11 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
     }
 
     formResetCallback() {
+      /** @ts-ignore */
+      if (this.hasOwnProperty('checked') && this.checked === true) {
+        /** @ts-ignore */
+        this.checked = false;
+      }
       this.value = '';
     }
   }
