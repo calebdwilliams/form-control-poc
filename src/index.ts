@@ -4,10 +4,24 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 
 export interface FormControlInterface {
   checked?: boolean;
+  internals: IElementInternals;
+  touched: boolean;
+  validationTarget: HTMLElement;
+  value: any;
   connectedCallback(): void;
   formResetCallback(): void;
-  internals: IElementInternals;
-  value: any;
+  valueChangedCallback(value: any): void;
+}
+
+export interface ValidatonObject {
+  key: string;
+  message?: string;
+  valid: boolean;
+}
+
+export interface Validator {
+  attribute: string;
+  callback(instance: HTMLElement, value: any): ValidatonObject;
 }
 
 export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass: T) {
@@ -16,9 +30,56 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
       return true;
     }
 
-    internals = this.attachInternals();
+    static get formControlValidators(): Validator[] {
+      return [];
+    }
 
+    static get observedAttributes(): string[] {
+      const validatorAttributes = this.formControlValidators
+        .map(validator => validator.attribute);
+      // @ts-ignore
+      const observedAttributes = super.observedAttributes || [];
+      // @ts-ignore
+      return [...observedAttributes, ...validatorAttributes];
+    }
+
+    static getValidator(attribute: string): Validator {
+      return this.formControlValidators.find(validator =>
+        validator.attribute === attribute
+      );
+    }
+
+    internals = this.attachInternals();
+    touched = false;
+    validationTarget: HTMLElement;
     value: any = '';
+
+    constructor(...args: any[]) {
+      super(...args);
+      this.addEventListener('focus', this.___onFocus);
+
+      const proto = this.constructor as typeof FormControl;
+      proto.formControlValidators.forEach(validator => {
+        console.log(validator.attribute)
+        proto.observedAttributes.push(validator.attribute);
+      });
+      console.log(proto.observedAttributes)
+    }
+
+    attributeChangedCallback(name, oldValue, newValue): void {
+      const proto = this.constructor as typeof FormControl;
+      const validator = proto.getValidator(name);
+
+      if (validator) {
+        this.___validate(this.value);
+      }
+
+      // @ts-ignore
+      if (super.attributeChangedCallback) {
+        // @ts-ignore
+        super.attributeChangedCallback();
+      }
+    }
 
     connectedCallback() {
       /** @ts-ignore */
@@ -52,10 +113,9 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
         },
         set(newValue) {
           value = newValue;
-          console.log(hasChecked, this.localName)
           if (hasChecked && this.checked || !hasChecked) {
             value = newValue;
-            this.internals.setFormValue(newValue);
+            this.___setValue(newValue)
           }
           if (set) {
             set.call(this, [newValue]);
@@ -82,9 +142,9 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
           },
           set(newChecked) {
             if (newChecked) {
-              this.internals.setFormValue(this.value);
+              this.___setValue(this.value);
             } else {
-              this.internals.setFormValue(null);
+              this.___setValue(null);
             }
             if (set) {
               set.call(this, [newChecked]);
@@ -103,8 +163,44 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
       if (this.hasOwnProperty('checked') && this.checked === true) {
         /** @ts-ignore */
         this.checked = false;
+      } else {
+        this.value = '';
       }
-      this.value = '';
+      this.touched = false;
+    }
+
+    valueChangedCallback(value: any): void {}
+
+    ___onFocus() {
+      this.touched = true;
+    }
+
+    ___setValue(value: any) {
+      this.internals.setFormValue(value);
+      if (this.valueChangedCallback) {
+        this.valueChangedCallback(value);
+      }
+      this.___validate(value);
+    }
+
+    ___validate(value: any) {
+      const proto = this.constructor as typeof FormControl;
+      proto.formControlValidators
+        .map(validator =>
+          validator.callback(this, value)
+        )
+        .map(({key, valid, message}) => {
+          console.log({valid, key, message})
+          if (valid) {
+            this.internals.setValidity({
+              [key]: false
+            });
+          } else if (valid === false) {
+            this.internals.setValidity({
+              [key]: true
+            }, message, this.validationTarget);
+          }
+        });
     }
   }
 
