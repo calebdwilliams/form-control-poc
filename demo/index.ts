@@ -45,7 +45,7 @@ class XControl extends FormControlMixin(HTMLElement) {
     this.value = (event.target as HTMLInputElement).value;
   }
 
-  formResetCallback(...a) {
+  formResetCallback() {
     super.formResetCallback();
     this.control.value = '';
   }
@@ -65,6 +65,12 @@ export class LitControl extends FormControlMixin(LitElement) {
 
   @query('input')
   validationTarget: HTMLInputElement;
+
+  validityCallback(validationKey): string {
+    if (validationKey === 'valueMissing') {
+      return 'nah';
+    }
+  }
 
   render() {
     return html`<input @input="${this.#onInput}" .value="${live(this.value)}">`;

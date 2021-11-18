@@ -194,13 +194,22 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
               [key]: false
             });
           } else if (valid === false) {
+            let validationMessage;
+            if (this.validityCallback) {
+              validationMessage = this.validityCallback(key);
+            }
             this.internals.setValidity({
               [key]: true
-            }, message, this.validationTarget);
+            }, validationMessage || message, this.validationTarget);
           }
         });
     }
+
+    validityCallback(validationKey: string): string|void {
+
+    }
   }
+
 
   return FormControl as Constructor<FormControlInterface> & T;
 }

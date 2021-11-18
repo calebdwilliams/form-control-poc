@@ -15,7 +15,6 @@ export const requiredValidator: Validator = {
       valid = false;
     }
 
-    console.log({valid})
     return valid;
   }
 };
