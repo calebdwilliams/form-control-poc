@@ -1,9 +1,9 @@
 import 'element-internals-polyfill';
-
 import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { FormControlMixin, Validator, ValidatonObject } from "../src";
+import { FormControlMixin, Validator } from "../src";
+import { requiredValidator } from '../src/validators';
 
 const template = document.createElement('template');
 template.innerHTML = `<label for="input"><slot></slot></label>
@@ -11,26 +11,12 @@ template.innerHTML = `<label for="input"><slot></slot></label>
 
 class XControl extends FormControlMixin(HTMLElement) {
   static get formControlValidators(): Validator[] {
-    return [{
-      attribute: 'test',
-      callback(instance, value): ValidatonObject {
-        let valid: boolean = true;
-
-        if (instance.hasAttribute('test') && value === 'foo') {
-          valid = false;
-        }
-
-        return {
-          valid,
-          key: 'badInput',
-          message: 'Fail'
-        };
-      }
-    }]
+    return [requiredValidator];
   }
 
-  value = '';
   checked = true;
+  required = true;
+  value = '';
 
   constructor() {
     super();
@@ -67,8 +53,18 @@ class XControl extends FormControlMixin(HTMLElement) {
 
 @customElement('lit-control')
 export class LitControl extends FormControlMixin(LitElement) {
+  static get formControlValidators() {
+    return [requiredValidator];
+  }
+
+  @property({ type: Boolean, reflect: true })
+  required = false;
+
   @property({ type: String })
   value = '';
+
+  @query('input')
+  validationTarget: HTMLInputElement;
 
   render() {
     return html`<input @input="${this.#onInput}" .value="${live(this.value)}">`;
