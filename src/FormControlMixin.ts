@@ -1,3 +1,4 @@
+import { IElementInternals } from 'element-internals-polyfill';
 import { Constructor, FormControlInterface, Validator } from './types';
 
 export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass: T) {
@@ -15,8 +16,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
         .map(validator => validator.attribute);
       // @ts-ignore
       const observedAttributes = super.observedAttributes || [];
-      // @ts-ignore
-      return [...observedAttributes, ...validatorAttributes];
+      const attributeSet = new Set([...observedAttributes, ...validatorAttributes])
+      return [...attributeSet];
     }
 
     static getValidator(attribute: string): Validator {
@@ -25,7 +26,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
       );
     }
 
-    internals = this.attachInternals();
+    internals = this.attachInternals() as unknown as IElementInternals;
     touched = false;
     validationTarget: HTMLElement;
     value: any = '';
@@ -64,18 +65,18 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
     }
 
     attributeChangedCallback(name, oldValue, newValue): void {
+      // @ts-ignore
+      if (super.attributeChangedCallback) {
+        // @ts-ignore
+        super.attributeChangedCallback(name, oldValue, newValue);
+      }
       const proto = this.constructor as typeof FormControl;
       const validator = proto.getValidator(name);
 
       if (validator) {
         this.___validate(this.value);
       }
-
-      // @ts-ignore
-      if (super.attributeChangedCallback) {
-        // @ts-ignore
-        super.attributeChangedCallback();
-      }
+      console.trace(name, this.hasAttribute(name));
     }
 
     connectedCallback() {
@@ -195,12 +196,22 @@ export function FormControlMixin<T extends Constructor<HTMLElement>>(SuperClass:
             });
           } else if (valid === false) {
             let validationMessage;
-            if (this.validityCallback) {
+            if (message instanceof Function) {
+              validationMessage = message(this, value);
+            } else if (this.validityCallback) {
               validationMessage = this.validityCallback(key);
             }
-            this.internals.setValidity({
-              [key]: true
-            }, validationMessage || message, this.validationTarget);
+            if (this.validationTarget) {
+              this.internals.setValidity({
+                [key]: true
+              }, validationMessage || message, this.validationTarget);
+            } else {
+              setTimeout(() => {
+                this.internals.setValidity({
+                  [key]: true
+                }, validationMessage || message, this.validationTarget);
+              });
+            }
           }
         });
     }

@@ -3,7 +3,7 @@ import { LitElement, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import { FormControlMixin, Validator } from "../src";
-import { requiredValidator } from '../src/validators';
+import { requiredValidator, programaticValidator } from '../src/validators';
 
 const template = document.createElement('template');
 template.innerHTML = `<label for="input"><slot></slot></label>
@@ -54,8 +54,11 @@ class XControl extends FormControlMixin(HTMLElement) {
 @customElement('lit-control')
 export class LitControl extends FormControlMixin(LitElement) {
   static get formControlValidators() {
-    return [requiredValidator];
+    return [requiredValidator, programaticValidator];
   }
+
+  @property({ type: String, reflect: true })
+  error: '';
 
   @property({ type: Boolean, reflect: true })
   required = false;

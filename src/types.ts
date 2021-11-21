@@ -16,13 +16,13 @@ export interface FormControlInterface {
 
 export interface ValidatonObject {
   key: string;
-  message?: string;
+  message?: string | ((arg: any) => string);
   valid: boolean;
 }
 
 export interface Validator {
   attribute: string;
   key?: string;
-  message: string;
+  message: string | ((instance: any, value: any) => string);
   callback(instance: HTMLElement, value: any): boolean;
 }
