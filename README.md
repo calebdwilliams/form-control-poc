@@ -107,6 +107,8 @@ class DemoFormControl extends FormControlMixin(LitElement) {
 
 Including the `requiredValidator` above will not implement a `valueMissing` algorithm to the component instance. Note, this does require the element's prototype have a `required` property.
 
+*Note* Every form control element will need a public `validationTarget` which must be a focusable element. In the event a control becomes invalid, this item will be focused on form submit for accessibility purposes. Failure to do so will cause an error to throw. 
+
 ### Creating a custom validator
 
 It is possible to create a custom validator object using the `Validator` interface:
