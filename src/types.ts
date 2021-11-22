@@ -11,18 +11,20 @@ export interface FormControlInterface {
   connectedCallback(): void;
   formResetCallback(): void;
   valueChangedCallback(value: any): void;
-  validityCallback(validaitonKey: string): string|void;
-}
-
-export interface ValidatonObject {
-  key: string;
-  message?: string | ((arg: any) => string);
-  valid: boolean;
+  validityCallback(validationKey: string): string|void;
 }
 
 export interface Validator {
-  attribute: string;
+  attribute?: string;
   key?: string;
   message: string | ((instance: any, value: any) => string);
   callback(instance: HTMLElement, value: any): boolean;
+}
+
+export interface IControlHost {
+  attributeChangedCallback?(name: string, oldValue: any, newValue: any): void;
+  connectedCallback?(): void;
+  disconnectedCallback?(): void;
+  checked?: boolean;
+  disabled?: boolean;
 }

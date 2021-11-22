@@ -1,17 +1,4 @@
 {
-  "compilerOptions": {
-    "allowJs": true,
-    "alwaysStrict": true,
-    "declaration": true,
-    "experimentalDecorators": true,
-    "lib": ["es2017", "dom"],
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "noEmit": false,
-    "noImplicitThis": true,
-    "outDir": "lib",
-    "target": "ES2021",
-    "sourceMap": false
-  },
+  "extends": "./tsconfig.base.json",
   "include": ["src", "demo"]
 }

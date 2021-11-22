@@ -115,14 +115,14 @@ It is possible to create a custom validator object using the `Validator` interfa
 
 ```typescript
 export interface Validator {
-  attribute: string;
+  attribute?: string;
   key?: string;
   message: string | ((instance: any, value: any) => string);
   callback(instance: HTMLElement, value: any): boolean;
 }
 ```
 
-Any given validator will key off an attribute which it will add to the element's `observedAttributes` array if it is not already present and re-evaluate the validation algorithm on value and validator attribute change. 
+Any given validator will key off an attribute (if present) which it will add to the element's `observedAttributes` array if it is not already present and re-evaluate the validation algorithm on value and validator attribute change. If no `attribute` is present on a validator, it will only be evaluated on value change.
 
 They `key` property is any of the fields in the `ValidityState` object to override on validator change. If `key` is not set, it is assumed to be `customError`.
 
