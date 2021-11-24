@@ -71,6 +71,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      */
     validationTarget: HTMLElement;
 
+    ___forceError = false;
+
     /**
      * The controls' form value. As this property is updated, the form value
      * will be updated. If a given control has a `checked` property, the value
@@ -88,13 +90,12 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * error. If using this property, it is wise to listen for 'invalid' events
      * on the element host and call preventDefault on the event. Doing this will
      * prevent browsers from showing a validation popup.
+     *
+     * TODO: Since the element gets focused on invalid, we need to force the error
+     * until a change is made.
      */
     get showError(): boolean {
-      if (this.disabled) {
-        return false;
-      }
-
-      return this.touched && this.validity && !this.validity.valid && !this.focused;
+      return this.___checkForError();
     }
 
     /**
@@ -223,7 +224,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
            * truthy before setting the form control value. If it is falsy,
            * remove the form control value.
            */
-          if (hasChecked && this.checked || !hasChecked) {
+          if (!hasChecked || hasChecked && this.checked) {
             value = newValue;
             this.___setValue(newValue)
           }
@@ -293,12 +294,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
 
     /** Reset control state when the form is reset */
     formResetCallback() {
-      if (this.hasOwnProperty('checked') && this.checked === true) {
-        this.checked = false;
-      } else {
-        this.value = '';
-      }
-      this.touched = false;
+      this.resetFormControl();
     }
 
     /**
@@ -311,6 +307,43 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * effectively `this.checked && this.value`.
      */
     valueChangedCallback(value: any): void {}
+
+    /**
+     * Resets a form control to its initial state
+     */
+    resetFormControl(): void {
+      if (this.hasOwnProperty('checked') && this.checked === true) {
+        this.checked = false;
+      } else {
+        this.value = '';
+      }
+      this.touched = false;
+      this.___forceError = false;
+      this.___checkForError();
+    }
+
+    /**
+     * Check to see if an error should be shown. This method will also
+     * update the internals state object with the --show-error state
+     * if necessary.
+     * @private
+     */
+    ___checkForError(): boolean {
+      if (this.disabled) {
+        return false;
+      }
+
+      const showError = this.___forceError ||
+        (this.touched && !this.validity.valid && !this.focused);
+
+      if (showError) {
+        this.internals.states.add('--show-error');
+      } else {
+        this.internals.states.delete('--show-error');
+      }
+
+      return showError;
+    }
 
     /**
      * Set this.touched and this.focused
@@ -329,15 +362,22 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      */
     ___onBlur = (): void => {
       this.focused = false;
+      /**
+       * Set ___forceError to ensure error messages persist until
+       * the value is changed.
+       */
+      if (!this.validity.valid && this.touched) {
+        this.___forceError = true;
+      }
       this.___requestUpdate();
     }
 
     /**
-     * Consider invalid events equivalent to a touch
+     * For the show error state on invalid
      * @private
      */
     ___onInvalid = (): void => {
-      this.touched = true;
+      this.___forceError = true;
       this.___requestUpdate();
     }
 
@@ -346,6 +386,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * @private
      */
     ___requestUpdate() {
+      this.___checkForError();
       /** @ts-ignore */
       if (this.requestUpdate) {
         /** @ts-ignore */
@@ -359,6 +400,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * @private
      */
     ___setValue(value: any): void {
+      this.___forceError = false;
       this.internals.setFormValue(value);
       if (this.valueChangedCallback) {
         this.valueChangedCallback(value);
@@ -417,26 +459,26 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
           }
         });
 
-        /**
-         * In some cases, the validationTarget might not be rendered
-         * at this point, if the validationTarget does exist, proceed
-         * with a call to internals.setValidity. If the validationTarget
-         * is still not set, we essentially wait a tick until it is there.
-         *
-         * If the validityTarget does not exist even after the setTimeout,
-         * this will throw.
-         *
-         * TODO: Make this section of the function less brittle
-         */
-        if (isValid) {
-          this.internals.setValidity({});
-        } else if (this.validationTarget) {
+      /**
+       * In some cases, the validationTarget might not be rendered
+       * at this point, if the validationTarget does exist, proceed
+       * with a call to internals.setValidity. If the validationTarget
+       * is still not set, we essentially wait a tick until it is there.
+       *
+       * If the validityTarget does not exist even after the setTimeout,
+       * this will throw.
+       *
+       * TODO: Make this section of the function less brittle
+       */
+      if (isValid) {
+        this.internals.setValidity({});
+      } else if (this.validationTarget) {
+        this.internals.setValidity(validity, validationMessage, this.validationTarget);
+      } else {
+        setTimeout(() => {
           this.internals.setValidity(validity, validationMessage, this.validationTarget);
-        } else {
-          setTimeout(() => {
-            this.internals.setValidity(validity, validationMessage, this.validationTarget);
-          });
-        }
+        });
+      }
     }
 
     /**

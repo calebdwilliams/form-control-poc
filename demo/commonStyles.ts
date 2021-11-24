@@ -19,12 +19,10 @@ input {
   font-size: 16px;
   padding: 4px;
 }
-:host(:invalid[touched]) input,
-:host([internals-invalid][touched]) input {
+:host(:--show-error) input {
   border-color: red;
 }
-:host(:invalid[touched]:not(:focus-within)) span,
-:host([internals-invalid][touched]:not(:focus-within)) span {
+:host(:--show-error) span {
   color: red;
 }
 `;

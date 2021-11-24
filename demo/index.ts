@@ -74,11 +74,18 @@ abstract class LegacyFormControl extends FormControlMixin(LitElement) {
   constructor() {
     super();
     this.addEventListener('keydown', this.onKeydown);
+    this.addEventListener('invalid', this.onInvalid);
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener('keydown', this.onKeydown);
+    this.removeEventListener('invalid', this.onInvalid);
+  }
+
+  private onInvalid = (event: Event): void => {
+    event.preventDefault();
+    this.validationTarget.focus();
   }
 
   private onKeydown = (event: KeyboardEvent): void => {
