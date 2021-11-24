@@ -19,10 +19,19 @@ input {
   font-size: 16px;
   padding: 4px;
 }
+/** Default invalid state */
 :host(:--show-error) input {
   border-color: red;
 }
 :host(:--show-error) span {
+  color: red;
+}
+
+/** Polyfilled invalid state */
+:host([state--show-error]) input {
+  border-color: red;
+}
+:host([state--show-error]) span {
   color: red;
 }
 `;
