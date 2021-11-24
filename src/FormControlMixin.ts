@@ -137,7 +137,6 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
             clearInterval(id);
             reject();
           } else if (this.validationTarget) {
-            console.log(tick);
             clearInterval(id);
             resolve();
           }
