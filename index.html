@@ -5,23 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="description" content="FormControl demo page">
     <meta charset="UTF-8">
-    <!-- <link rel="stylesheet" href="styles/page.css"/> -->
+    <style>
+      form {
+        display: flex;
+        flex-flow: column;
+        gap: 16px;
+        max-width: 400px;
+      }
+      form button {
+        font-size: 16px;
+        padding: 4px 8px;
+      }
+      form .buttons {
+        align-self: flex-end;
+        display: flex;
+        gap: 8px;
+      }
+    </style>
   </head>
   <body>
     <form id="form">
-      <!-- <test-input name="test">Label text</test-input> -->
-      <!-- <x-control name="x-control"></x-control> -->
-      <lit-control name="lit-control" required></lit-control>
-      <button type="submit">Submit</button>
-      <button type="reset">Reset</button>
+      <lit-control
+        name="lit-control"
+        required
+      ></lit-control>
+
+      <legacy-demo
+        name="legacy-demo"
+        minlength="4"
+        pattern=".*lit$"
+      >
+        Example of how to implement a legacy control
+      </legacy-demo>
+      <div class="buttons">
+        <button type="reset">Reset</button>
+        <button type="submit">Submit</button>
+      </div>
     </form>
 
     <script>
+      const form = document.getElementById('form');
+      const litControl = document.querySelector('lit-control');
+
       form.addEventListener('submit', event => {
         event.preventDefault();
         const data = new FormData(event.target);
-        console.log(data.get('x-control'));
-        console.log(data.get('lit-control'));
+        console.log({
+          litControl: data.get('lit-control'),
+          legacyDemo: data.get('legacy-demo')
+        })
+      });
+
+      litControl.addEventListener('input', event => {
+        if (event.target.value === 'fooo') {
+          event.target.error = 'That is a silly response';
+        }
       });
     </script>
   <script defer src="/demo/index.ts" type="module"></script>

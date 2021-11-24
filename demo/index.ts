@@ -1,64 +1,27 @@
 import 'element-internals-polyfill';
-import { LitElement, html } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
 import { FormControlMixin, Validator } from "../src";
-import { requiredValidator, programmaticValidator } from '../src/validators';
-
-const template = document.createElement('template');
-template.innerHTML = `<label for="input"><slot></slot></label>
-<input type="text" id="input">`;
-
-class XControl extends FormControlMixin(HTMLElement) {
-  static get formControlValidators(): Validator[] {
-    return [requiredValidator];
-  }
-
-  checked = true;
-  required = true;
-  value = '';
-
-  constructor() {
-    super();
-    const root = this.attachShadow({ mode: 'open' });
-    root.append(template.content.cloneNode(true));
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    this.control.addEventListener('input', this.#onInput);
-  }
-
-  disconnectedCallback() {
-    this.control.removeEventListener('input', this.#onInput);
-  }
-
-  get control(): HTMLInputElement {
-    return this.shadowRoot.querySelector('input');
-  }
-
-  get validationTarget(): HTMLInputElement {
-    return this.shadowRoot.querySelector('input');
-  }
-
-  #onInput = (event: Event): void => {
-    this.value = (event.target as HTMLInputElement).value;
-  }
-
-  formResetCallback() {
-    super.formResetCallback();
-    this.control.value = '';
-  }
-}
+import {
+  requiredValidator,
+  minLengthValidator,
+  maxLengthValidator,
+  programmaticValidator,
+  patternValidator
+} from '../src/validators';
+import { commonSheet } from './commonStyles';
 
 @customElement('lit-control')
 export class LitControl extends FormControlMixin(LitElement) {
+  static styles = commonSheet;
+
   static get formControlValidators() {
     return [requiredValidator, programmaticValidator];
   }
 
   @property({ type: String, reflect: true })
-  error: '';
+  error = '';
 
   @property({ type: Boolean, reflect: true })
   required = false;
@@ -69,17 +32,15 @@ export class LitControl extends FormControlMixin(LitElement) {
   @query('input')
   validationTarget: HTMLInputElement;
 
-  validityCallback(validationKey): string {
-    if (validationKey === 'valueMissing') {
-      return 'nah';
-    }
+  render() {
+    return html`<label for="input"><slot>Default label</slot></label>
+    <input @input="${this.#onInput}" .value="${live(this.value)}">`;
   }
 
-  render() {
-    return html`
-      <input @input="${this.#onInput}" .value="${live(this.value)}">
-      <span>${this.showError ? this.validationMessage : ''}</span>
-    `;
+  validityCallback(key: string): string {
+    if (key === 'valueMissing') {
+      return 'You must include a value for all instances of lit-control';
+    }
   }
 
   #onInput = ({ target }: { target: HTMLInputElement}): void => {
@@ -87,6 +48,51 @@ export class LitControl extends FormControlMixin(LitElement) {
   }
 }
 
-customElements.define('x-control', XControl);
+abstract class LegacyFormControl extends FormControlMixin(LitElement) {
+  static get formControlValidators() {
+    return [
+      requiredValidator,
+      programmaticValidator,
+      maxLengthValidator,
+      minLengthValidator,
+      patternValidator
+    ];
+  }
 
+  @property({ type: Boolean, reflect: true })
+  required = false;
 
+  @property({ type: Number, attribute: 'minlength' })
+  minLength: number;
+
+  @property({ type: Number, attribute: 'maxlength' })
+  maxLength: number;
+
+  @property({ type: String, reflect: true })
+  pattern: string;
+}
+
+@customElement('legacy-demo')
+class Demo extends LegacyFormControl {
+  static styles = commonSheet;
+
+  @query('input')
+  validationTarget: HTMLInputElement;
+
+  render() {
+    return html`<label for="control"><slot></slot></label>
+    <input
+      aria-describedby="hint"
+      id="control"
+      .minLength="${live(this.minLength)}"
+      ?required="${this.required}"
+      .value="${live(this.value)}"
+      @input="${this.onInput}"
+    >
+    <span id="hint">${this.showError ? this.validationMessage : 'Value must end with the string "lit"'}</span>`;
+  }
+
+  onInput({ target }: Event & { target: HTMLInputElement }) {
+    this.value = target.value;
+  }
+}

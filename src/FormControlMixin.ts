@@ -50,11 +50,20 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
     /** The ElementInternals instance for the control. */
     internals = this.attachInternals() as unknown as IElementInternals;
 
+    /** Keep track of if the control has focus */
+    focused = false;
+
     /**
      * Toggles to true whenever the element has been focused. This property
      * will reset whenever the control's formResetCallback is called.
      */
-    touched = false;
+     get touched() {
+      return this.hasAttribute('touched');
+    }
+
+    set touched(touched) {
+      this.toggleAttribute('touched', !!touched);
+    }
 
     /**
      * The element that will receive focus when the control's validity
@@ -85,7 +94,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
         return false;
       }
 
-      return this.touched && this.validity && !this.validity.valid && !this.matches(':focus');
+      return this.touched && this.validity && !this.validity.valid && !this.focused;
     }
 
     /**
@@ -108,6 +117,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
     constructor(...args: any[]) {
       super(...args);
       this.addEventListener('focus', this.___onFocus);
+      this.addEventListener('blur', this.___onBlur);
+      this.addEventListener('invalid', this.___onInvalid);
 
       /**
        * When the element is constructed we will need to grab a list of all
@@ -127,9 +138,12 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
         super.disconnectedCallback();
       }
       /**
-       * Remove the focus event listener that toggles the touched state
+       * Remove the event listeners that toggles the touched and focused states
        */
       this.removeEventListener('focus', this.___onFocus);
+      this.removeEventListener('blur', this.___onBlur);
+      this.removeEventListener('invalid', this.___onInvalid);
+
     }
 
     attributeChangedCallback(name, oldValue, newValue): void {
@@ -299,11 +313,44 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
     valueChangedCallback(value: any): void {}
 
     /**
-     * Set this.touched to true when the element is focused
+     * Set this.touched and this.focused
+     * to true when the element is focused
      * @private
      */
     ___onFocus = (): void => {
       this.touched = true;
+      this.focused = true;
+      this.___requestUpdate();
+    }
+
+    /**
+     * Reset this.focused on blur
+     * @private
+     */
+    ___onBlur = (): void => {
+      this.focused = false;
+      this.___requestUpdate();
+    }
+
+    /**
+     * Consider invalid events equivalent to a touch
+     * @private
+     */
+    ___onInvalid = (): void => {
+      this.touched = true;
+      this.___requestUpdate();
+    }
+
+    /**
+     * Call Lit's requestUpdate property
+     * @private
+     */
+    ___requestUpdate() {
+      /** @ts-ignore */
+      if (this.requestUpdate) {
+        /** @ts-ignore */
+        this.requestUpdate();
+      }
     }
 
     /**

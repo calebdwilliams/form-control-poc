@@ -6,6 +6,7 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 /** Interface of exported FormControl behavior */
 export interface FormControlInterface {
   checked?: boolean;
+  focused: boolean;
   internals: IElementInternals;
   showError: boolean;
   touched: boolean;
