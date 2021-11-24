@@ -112,12 +112,12 @@ class Demo extends LegacyFormControl {
       .minLength="${live(this.minLength)}"
       ?required="${this.required}"
       .value="${live(this.value)}"
-      @input="${this.onInput}"
+      @input="${this.#onInput}"
     >
     <span id="hint">${this.showError ? this.validationMessage : 'Value must end with the string "lit"'}</span>`;
   }
 
-  onInput({ target }: Event & { target: HTMLInputElement }) {
+  #onInput({ target }: Event & { target: HTMLInputElement }) {
     this.value = target.value;
   }
 }

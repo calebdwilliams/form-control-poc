@@ -5,26 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <meta name="description" content="FormControl demo page">
     <meta charset="UTF-8">
-    <style>
-      form {
-        display: flex;
-        flex-flow: column;
-        gap: 16px;
-        max-width: 400px;
-      }
-      form button {
-        font-size: 16px;
-        padding: 4px 8px;
-      }
-      form .buttons {
-        align-self: flex-end;
-        display: flex;
-        gap: 8px;
-      }
-    </style>
   </head>
   <body>
     <form id="form">
+      <h1>FormControlMixin demo</h1>
       <lit-control
         name="lit-control"
         required
@@ -62,5 +46,35 @@
         }
       });
     </script>
-  <script defer src="/demo/index.ts" type="module"></script>
+
+    <style>
+      body {
+        background: ButtonFace;
+      }
+      form {
+        background: #ffffff;
+        border-radius: 4px;
+        display: flex;
+        flex-flow: column;
+        gap: 24px;
+        margin: 16px auto;
+        padding: 16px;
+        max-width: 400px;
+      }
+      form h1 {
+        font-family: Helvetica, Arial, sans-serif;
+        margin: 0;
+      }
+      form button {
+        font-size: 16px;
+        padding: 4px 8px;
+      }
+      form .buttons {
+        align-self: flex-end;
+        display: flex;
+        gap: 8px;
+      }
+    </style>
+    <script defer src="/demo/index.ts" type="module"></script>
+  </body>
 </html>
