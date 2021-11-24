@@ -473,6 +473,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
              */
             if (message instanceof Function) {
               messageResult = message(this, value);
+            } else if (typeof message === 'string') {
+              messageResult = message;
             } else if (this.validityCallback(key)) {
               messageResult = this.validityCallback(key) as string;
             }

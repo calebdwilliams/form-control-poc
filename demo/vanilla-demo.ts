@@ -5,8 +5,14 @@ import {
 } from '../src/validators';
 import { commonSheet } from './commonStyles';
 
+const vanillaStyles = new CSSStyleSheet();
+vanillaStyles.replace(`
+:host([required]) .optional {
+  display: none;
+}`);
+
 const template = document.createElement('template');
-template.innerHTML = `<label for="input"><slot>Label text goes here</slot></label>
+template.innerHTML = `<label for="input"><slot>Label text goes here</slot> <span class="optional">(optional)</span></label>
 <input id="input">`;
 
 export class VanillaDemo extends FormControlMixin(HTMLElement) {
@@ -17,7 +23,7 @@ export class VanillaDemo extends FormControlMixin(HTMLElement) {
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
-    root.adoptedStyleSheets = [commonSheet];
+    root.adoptedStyleSheets = [commonSheet, vanillaStyles];
     root.append(template.content.cloneNode(true));
   }
 
