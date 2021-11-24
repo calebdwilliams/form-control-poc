@@ -1,6 +1,8 @@
-import { css } from 'lit';
+import 'construct-style-sheets-polyfill';
 
-export const commonSheet = css`:host {
+const commonSheet = new CSSStyleSheet();
+
+commonSheet.replace(`:host {
   display: flex;
   flex-flow: column;
   font-family: Helvetica, Arial, sans-serif;
@@ -34,4 +36,6 @@ input {
 :host([state--show-error]) span {
   color: red;
 }
-`;
+`);
+
+export { commonSheet };

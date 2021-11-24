@@ -41,7 +41,7 @@ export const minLengthValidator: Validator = {
     return `Value must be at least ${instance.minLength} characters long`;
   },
   callback(instance: HTMLElement & { minLength: number }, value) {
-    if (!!value && instance.minLength > value.length) {
+    if (!!value && instance.minLength >= value.length) {
       return false;
     }
     return true;
@@ -52,10 +52,10 @@ export const maxLengthValidator: Validator = {
   attribute: 'maxlength',
   key: 'rangeOverflow',
   message(instance) {
-    return `Value must not be more than ${instance.minLength} characters long`;
+    return `Value must not be more than ${instance.maxLength} characters long`;
   },
   callback(instance: HTMLElement & { maxLength: number }, value) {
-    if (!!value && instance.maxLength <= value.length) {
+    if (!!value && instance.maxLength < value.length) {
       return false;
     }
     return true;
