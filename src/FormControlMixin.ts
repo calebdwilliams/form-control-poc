@@ -71,8 +71,6 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      */
     validationTarget: HTMLElement;
 
-    ___forceError = false;
-
     /**
      * The controls' form value. As this property is updated, the form value
      * will be updated. If a given control has a `checked` property, the value
@@ -90,9 +88,6 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * error. If using this property, it is wise to listen for 'invalid' events
      * on the element host and call preventDefault on the event. Doing this will
      * prevent browsers from showing a validation popup.
-     *
-     * TODO: Since the element gets focused on invalid, we need to force the error
-     * until a change is made.
      */
     get showError(): boolean {
       return this.___checkForError();
@@ -115,11 +110,39 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
       return this.internals.validity;
     }
 
+    /**
+     * Exists to control when an error should be displayed
+     * @private
+     */
+     ___forceError = false;
+
+    /**
+     * Is set in the constructor, will resolve whenever the validationTarget
+     * is ready so `internals.setValidity` can have access to the element
+     * and will not throw.
+     * @private
+     */
+    ___ready: Promise<void>;
+
     constructor(...args: any[]) {
       super(...args);
       this.addEventListener('focus', this.___onFocus);
       this.addEventListener('blur', this.___onBlur);
       this.addEventListener('invalid', this.___onInvalid);
+
+      let tick = 0;
+      this.___ready = new Promise((resolve, reject) => {
+        const id = setInterval(() => {
+          if (tick >= 100) {
+            clearInterval(id);
+            reject();
+          } else if (this.validationTarget) {
+            console.log(tick);
+            clearInterval(id);
+            resolve();
+          }
+        }, 0);
+      })
 
       /**
        * When the element is constructed we will need to grab a list of all
@@ -467,17 +490,19 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
        *
        * If the validityTarget does not exist even after the setTimeout,
        * this will throw.
-       *
-       * TODO: Make this section of the function less brittle
        */
       if (isValid) {
         this.internals.setValidity({});
       } else if (this.validationTarget) {
         this.internals.setValidity(validity, validationMessage, this.validationTarget);
       } else {
-        setTimeout(() => {
-          this.internals.setValidity(validity, validationMessage, this.validationTarget);
-        });
+        this.___ready
+          .then(() => {
+            this.internals.setValidity(validity, validationMessage, this.validationTarget);
+          })
+          .catch(() => {
+            console.error('Validation target is not set on element', this);
+          });
       }
     }
 
