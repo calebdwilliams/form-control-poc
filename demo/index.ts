@@ -76,7 +76,10 @@ export class LitControl extends FormControlMixin(LitElement) {
   }
 
   render() {
-    return html`<input @input="${this.#onInput}" .value="${live(this.value)}">`;
+    return html`
+      <input @input="${this.#onInput}" .value="${live(this.value)}">
+      <span>${this.showError ? this.validationMessage : ''}</span>
+    `;
   }
 
   #onInput = ({ target }: { target: HTMLInputElement}): void => {

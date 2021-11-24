@@ -7,8 +7,10 @@ export type Constructor<T = {}> = new (...args: any[]) => T;
 export interface FormControlInterface {
   checked?: boolean;
   internals: IElementInternals;
+  showError: boolean;
   touched: boolean;
   validationTarget: HTMLElement;
+  validationMessage: string;
   value: any;
   connectedCallback(): void;
   formResetCallback(): void;

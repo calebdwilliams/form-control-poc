@@ -84,6 +84,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
       if (this.disabled) {
         return false;
       }
+
+      return this.touched && this.validity && !this.validity.valid && !this.matches(':focus');
     }
 
     /**
@@ -323,6 +325,10 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      */
     ___validate(value: any): void {
       const proto = this.constructor as typeof FormControl;
+      const validity: Partial<Record<keyof ValidityState, boolean>> = {};
+      let validationMessage = '';
+      let isValid = true;
+
       proto.formControlValidators
         .forEach(validator => {
           /** Get data off the Validator */
@@ -334,13 +340,16 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
           /** Invoke the Validator callback with the instance and the value */
           const valid = callback(this, value);
 
-          if (valid) {
-            /** Reset the validity for the Validator's key */
-            this.internals.setValidity({
-              [key]: false
-            });
-          } else if (valid === false) {
-            let validationMessage;
+          /**
+           * Invert the validity because we are setting the new property
+           * on the new ValidityState object
+           */
+          validity[key] = !valid;
+
+          if (valid === false) {
+            isValid = false;
+            let messageResult: string;
+
             /**
              * The Validator interfaces allows for the message property
              * to be either a string or a function. If it is a function,
@@ -352,35 +361,35 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
              * message for a given validity key.
              */
             if (message instanceof Function) {
-              validationMessage = message(this, value);
-            } else if (this.validityCallback) {
-              validationMessage = this.validityCallback(key);
+              messageResult = message(this, value);
+            } else if (this.validityCallback(key)) {
+              messageResult = this.validityCallback(key) as string;
             }
 
-            /**
-             * In some cases, the validationTarget might not be rendered
-             * at this point, if the validationTarget does exist, proceed
-             * with a call to internals.setValidity. If the validationTarget
-             * is still not set, we essentially wait a tick until it is there.
-             *
-             * If the validityTarget does not exist even after the setTimeout,
-             * this will throw.
-             *
-             * TODO: Make this section of the function less brittle
-             */
-            if (this.validationTarget) {
-              this.internals.setValidity({
-                [key]: true
-              }, validationMessage || message, this.validationTarget);
-            } else {
-              setTimeout(() => {
-                this.internals.setValidity({
-                  [key]: true
-                }, validationMessage || message, this.validationTarget);
-              });
-            }
+            validationMessage = messageResult;
           }
         });
+
+        /**
+         * In some cases, the validationTarget might not be rendered
+         * at this point, if the validationTarget does exist, proceed
+         * with a call to internals.setValidity. If the validationTarget
+         * is still not set, we essentially wait a tick until it is there.
+         *
+         * If the validityTarget does not exist even after the setTimeout,
+         * this will throw.
+         *
+         * TODO: Make this section of the function less brittle
+         */
+        if (isValid) {
+          this.internals.setValidity({});
+        } else if (this.validationTarget) {
+          this.internals.setValidity(validity, validationMessage, this.validationTarget);
+        } else {
+          setTimeout(() => {
+            this.internals.setValidity(validity, validationMessage, this.validationTarget);
+          });
+        }
     }
 
     /**
@@ -391,9 +400,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      * The returned value will be used as the validationMessage for the given key.
      * @param validationKey {string} - The key that has returned invalid
      */
-    validityCallback(validationKey: string): string|void {
-
-    }
+    validityCallback(validationKey: string): string|void {}
   }
 
 
