@@ -1,4 +1,4 @@
-import { expect, fixture, fixtureCleanup, html, oneEvent } from '@open-wc/testing';
+import { expect, fixture, fixtureCleanup, html } from '@open-wc/testing';
 import { spy } from 'sinon';
 import { formValues, parseFormAsObject, submit } from '../src/utils';
 
