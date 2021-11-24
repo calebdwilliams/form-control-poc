@@ -17,7 +17,6 @@ export class VanillaDemo extends FormControlMixin(HTMLElement) {
   constructor() {
     super();
     const root = this.attachShadow({ mode: 'open' });
-    /** @ts-ignore */
     root.adoptedStyleSheets = [commonSheet];
     root.append(template.content.cloneNode(true));
   }
