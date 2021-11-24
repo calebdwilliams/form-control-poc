@@ -1,8 +1,8 @@
 import 'element-internals-polyfill';
-import { LitElement, css, html } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import { live } from 'lit/directives/live.js';
-import { FormControlMixin, Validator } from "../src";
+import { FormControlMixin, submit } from "../src";
 import {
   requiredValidator,
   minLengthValidator,
@@ -70,6 +70,24 @@ abstract class LegacyFormControl extends FormControlMixin(LitElement) {
 
   @property({ type: String, reflect: true })
   pattern: string;
+
+  constructor() {
+    super();
+    this.addEventListener('keydown', this.onKeydown);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.removeEventListener('keydown', this.onKeydown);
+  }
+
+  private onKeydown = (event: KeyboardEvent): void => {
+    if (event.code === 'Enter') {
+      if (this.form) {
+        submit(this.form);
+      }
+    }
+  }
 }
 
 @customElement('legacy-demo')
