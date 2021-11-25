@@ -203,7 +203,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
      */
     ___formControlInit(): void {
       /** Closed over variable to track value changes */
-      let value: any = '';
+      let value: any = this.value || '';
 
       /** Value getter reference within the closure */
       let set;
@@ -212,7 +212,8 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
       let get;
 
       /** Look to see if '`checked'` is on the control's prototype */
-      const hasChecked = this.hasOwnProperty('checked');
+      const hasChecked = this.hasOwnProperty('checked') || this.constructor.prototype.hasOwnProperty('checked');
+      console.log(this, hasChecked)
 
       /**
        * The FormControlMixin writes the value property on the element host
@@ -267,13 +268,19 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
        * If checked already exists on a prototype, we need to monitor
        * for changes to that property to ensure the proper value is set on the
        * control's form.
+       *
+       * TODO: Justin Fagnani cautioned that this might not scale well. Maybe
+       * this should be a direct check against the value of checked ...
        */
       if (hasChecked) {
         /**
          * As with value, save a reference to the getter/setter if they already
          * exist in the prototype chain
          */
-        const descriptor = Object.getOwnPropertyDescriptor(this, 'checked');
+        let descriptor = Object.getOwnPropertyDescriptor(this, 'checked');
+        if (this.constructor.prototype.hasOwnProperty('checked')) {
+          descriptor = Object.getOwnPropertyDescriptor(this.constructor.prototype, 'checked');
+        }
         let get = descriptor.get;
         let set = descriptor.set;
 
@@ -299,7 +306,7 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
 
             /** If a setter exists, use it */
             if (set) {
-              set.call(this, [newChecked]);
+              set.call(this, newChecked);
             }
 
             /** Updated closure value */

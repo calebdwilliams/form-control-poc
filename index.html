@@ -27,6 +27,16 @@
         maxlength="5"
       >Vanilla JS demo</vanilla-demo>
 
+      <div class="form-field">
+        <label for="switch">Switch</label>
+        <demo-switch
+          id="switch"
+          name="switch"
+          value="switch-on"
+        >
+        </demo-switch>
+      </div>
+
       <div class="buttons">
         <button type="reset">Reset</button>
         <button type="submit">Submit</button>
@@ -43,7 +53,8 @@
         console.log({
           litControl: data.get('lit-control'),
           legacyDemo: data.get('legacy-demo'),
-          vanillaDemo: data.get('vanilla-demo')
+          vanillaDemo: data.get('vanilla-demo'),
+          switch: data.get('switch')
         });
       });
 
@@ -79,6 +90,12 @@
       form .buttons {
         align-self: flex-end;
         display: flex;
+        gap: 8px;
+      }
+      .form-field {
+        align-items: center;
+        display: flex;
+        font-family: Arial, Helvetica, sans-serif;
         gap: 8px;
       }
     </style>
