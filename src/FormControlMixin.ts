@@ -213,7 +213,6 @@ export function FormControlMixin<T extends Constructor<HTMLElement & IControlHos
 
       /** Look to see if '`checked'` is on the control's prototype */
       const hasChecked = this.hasOwnProperty('checked') || this.constructor.prototype.hasOwnProperty('checked');
-      console.log(this, hasChecked)
 
       /**
        * The FormControlMixin writes the value property on the element host
